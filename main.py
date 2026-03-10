@@ -88,6 +88,15 @@ class TrainingOut(BaseModel):
 
     class Config:
         orm_mode = True
+        
+class UserOut(BaseModel):
+    id: int
+    name: str
+    email: EmailStr
+    trainings: List[str]
+    
+    class Config:
+        orm_mode = True
 
 # ------------------- ENDPOINTS -------------------
 
@@ -121,6 +130,27 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     db.delete(user)
     db.commit()
     return {'message': f'Пользователь c id {user_id} успешно удалён'}
+
+@app.get('/users/{user_id}', response_model=UserOut, summary='Информация о пользователе')
+def get_user(user_id: int, db: Session = Depends(get_db)):
+    user = (
+        db.query(UserDB)
+        .options(selectinload(UserDB.trainings).selectinload(RegistrationDB.training))
+        .filter(UserDB.id == user_id)
+        .first()
+    )
+    
+    if not user:
+        raise HTTPException(status_code=404, detail='Пользователь не найден')
+    # Список тренировок, на которые записан пользователь
+    trainings = [r.training.title for r in user.trainings]
+    
+    return UserOut(
+        id=user.id,
+        name=user.name,
+        email=user.email,
+        trainings=trainings
+    )
 
 # --------------------- Тренировки ---------------------
 
@@ -175,7 +205,7 @@ def register(training_id: int, request: TrainingRegister, db: Session = Depends(
         RegistrationDB.training_id == training_id
     ).first()
     if existing:
-        raise HTTPException(status_code=400, detail="Вы уже записаны на эту тренировку")
+        raise HTTPException(status_code=400, detail='Вы уже записаны на эту тренировку')
 
     # Проверка вместимости
     count = db.query(RegistrationDB).filter(RegistrationDB.training_id == training_id).count()
@@ -190,7 +220,7 @@ def register(training_id: int, request: TrainingRegister, db: Session = Depends(
     return {"message": f"Пользователь {user.name} успешно записан на тренировку {training.title}"}
 
 
-@app.get('/trainings/{training_id}', response_model=TrainingOut, summary="Информация о тренировке")
+@app.get('/trainings/{training_id}', response_model=TrainingOut, summary='Информация о тренировке')
 def get_training(training_id: int, db: Session = Depends(get_db)):
     training = (
         db.query(TrainingDB)
