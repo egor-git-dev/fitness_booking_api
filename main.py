@@ -23,7 +23,10 @@ class UserDB(Base):
     email: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str]
 
-    trainings: Mapped[List["RegistrationDB"]] = relationship(back_populates="user")
+    trainings: Mapped[List["RegistrationDB"]] = relationship(
+        back_populates="user",
+        cascade='all, delete-orphan'
+    )
 
 
 class TrainingDB(Base):
@@ -34,7 +37,10 @@ class TrainingDB(Base):
     description: Mapped[str | None]
     capacity: Mapped[int]
 
-    registrations: Mapped[List["RegistrationDB"]] = relationship(back_populates="training")
+    registrations: Mapped[List["RegistrationDB"]] = relationship(
+        back_populates="training",
+        cascade='all, delete-orphan'
+    )
 
 
 class RegistrationDB(Base):
@@ -184,7 +190,7 @@ def register(training_id: int, request: TrainingRegister, db: Session = Depends(
     return {"message": f"Пользователь {user.name} успешно записан на тренировку {training.title}"}
 
 
-@app.get('/trainings/{training_id}', response_model=TrainingOut, summary="Получить одну тренировку с участниками")
+@app.get('/trainings/{training_id}', response_model=TrainingOut, summary="Информация о тренировке")
 def get_training(training_id: int, db: Session = Depends(get_db)):
     training = (
         db.query(TrainingDB)
@@ -204,3 +210,14 @@ def get_training(training_id: int, db: Session = Depends(get_db)):
         capacity=training.capacity,
         attendees=ateendees
     )
+
+
+@app.delete('/trainings/{training_id}', summary='Удалить тренировку')
+def delete_training(training_id: int, db: Session = Depends(get_db)):
+    training = db.query(TrainingDB).filter(TrainingDB.id == training_id).first()
+    if not training:
+        raise HTTPException(status_code=404, detail='Тренировка не найдена')
+    db.delete(training)
+    db.commit()
+    
+    return {'message': f'Тренировка c id {training_id} успешно удалена'}
