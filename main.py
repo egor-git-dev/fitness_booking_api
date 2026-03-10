@@ -47,7 +47,6 @@ class RegistrationDB(Base):
     user: Mapped[UserDB] = relationship("UserDB", back_populates="trainings")
     training: Mapped[TrainingDB] = relationship("TrainingDB", back_populates="registrations")
 
-
 Base.metadata.create_all(bind=engine)
 
 # ------------------- DB SESSION -------------------
@@ -183,3 +182,25 @@ def register(training_id: int, request: TrainingRegister, db: Session = Depends(
     db.refresh(registration)
 
     return {"message": f"Пользователь {user.name} успешно записан на тренировку {training.title}"}
+
+
+@app.get('/trainings/{training_id}', response_model=TrainingOut, summary="Получить одну тренировку с участниками")
+def get_training(training_id: int, db: Session = Depends(get_db)):
+    training = (
+        db.query(TrainingDB)
+        .options(selectinload(TrainingDB.registrations).selectinload(RegistrationDB.user))
+        .filter(TrainingDB.id == training_id)
+        .first()
+    )
+    if not training:
+        raise HTTPException(status_code=404, detail='Тренировка не найдена')
+    
+    ateendees = [r.user.email for r in training.registrations]
+    
+    return TrainingOut(
+        id=training.id,
+        title=training.title,
+        description=training.description,
+        capacity=training.capacity,
+        attendees=ateendees
+    )
