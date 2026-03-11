@@ -1,6 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException
 from pydantic import BaseModel, EmailStr
-from typing import List, Optional
 from sqlalchemy import create_engine, Column, Integer, String, Text, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, Mapped, mapped_column, relationship, selectinload
@@ -23,7 +22,7 @@ class UserDB(Base):
     email: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str]
 
-    trainings: Mapped[List["RegistrationDB"]] = relationship(
+    trainings: Mapped[list["RegistrationDB"]] = relationship(
         back_populates="user",
         cascade='all, delete-orphan'
     )
@@ -37,7 +36,7 @@ class TrainingDB(Base):
     description: Mapped[str | None]
     capacity: Mapped[int]
 
-    registrations: Mapped[List["RegistrationDB"]] = relationship(
+    registrations: Mapped[list["RegistrationDB"]] = relationship(
         back_populates="training",
         cascade='all, delete-orphan'
     )
@@ -82,9 +81,9 @@ class TrainingRegister(BaseModel):
 class TrainingOut(BaseModel):
     id: int
     title: str
-    description: Optional[str]
+    description: str | None
     capacity: int
-    attendees: List[str]
+    attendees: list[str]
 
     class Config:
         orm_mode = True
@@ -93,7 +92,7 @@ class UserOut(BaseModel):
     id: int
     name: str
     email: EmailStr
-    trainings: List[str]
+    trainings: list[str]
     
     class Config:
         orm_mode = True
@@ -166,7 +165,7 @@ def create_training(training: TrainingCreate, db: Session = Depends(get_db)):
     db.refresh(new_training)
     return {'message': f'Тренировка "{training.title}" создана'}
 
-@app.get('/trainings', response_model=List[TrainingOut], summary='Все тренировки')
+@app.get('/trainings', response_model=list[TrainingOut], summary='Все тренировки')
 def list_trainings(db: Session = Depends(get_db)):
     trainings = (
         db.query(TrainingDB)
