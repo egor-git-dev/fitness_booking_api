@@ -52,7 +52,7 @@ class RegistrationDB(Base):
     user: Mapped[UserDB] = relationship("UserDB", back_populates="trainings")
     training: Mapped[TrainingDB] = relationship("TrainingDB", back_populates="registrations")
 
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
 # ------------------- DB SESSION -------------------
 
