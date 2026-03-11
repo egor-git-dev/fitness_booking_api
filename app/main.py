@@ -1,101 +1,12 @@
 from fastapi import FastAPI, Depends, HTTPException
-from pydantic import BaseModel, EmailStr
-from sqlalchemy import create_engine, Column, Integer, String, Text, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
+from app import models, schemas, deps
+from app.models import UserDB, TrainingDB, RegistrationDB
+from app.schemas import UserCreate, UserOut,TrainingOut, TrainingCreate, TrainingRegister
+from app.deps import get_db
 from sqlalchemy.orm import sessionmaker, Session, Mapped, mapped_column, relationship, selectinload
 
 app = FastAPI()
 
-DATABASE_URL = 'postgresql://egor:1234@localhost:5432/fitness_db'
-
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
-
-# ------------------- МОДЕЛИ -------------------
-
-class UserDB(Base):
-    __tablename__ = 'users'
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str]
-    email: Mapped[str] = mapped_column(unique=True)
-    password: Mapped[str]
-
-    trainings: Mapped[list["RegistrationDB"]] = relationship(
-        back_populates="user",
-        cascade='all, delete-orphan'
-    )
-
-
-class TrainingDB(Base):
-    __tablename__ = 'trainings'
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    title: Mapped[str]
-    description: Mapped[str | None]
-    capacity: Mapped[int]
-
-    registrations: Mapped[list["RegistrationDB"]] = relationship(
-        back_populates="training",
-        cascade='all, delete-orphan'
-    )
-
-
-class RegistrationDB(Base):
-    __tablename__ = 'registrations'
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
-    training_id: Mapped[int] = mapped_column(ForeignKey('trainings.id'))
-
-    user: Mapped[UserDB] = relationship("UserDB", back_populates="trainings")
-    training: Mapped[TrainingDB] = relationship("TrainingDB", back_populates="registrations")
-
-# Base.metadata.create_all(bind=engine)
-
-# ------------------- DB SESSION -------------------
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-# ------------------- SCHEMAS -------------------
-
-class UserCreate(BaseModel):
-    name: str
-    email: EmailStr
-    password: str
-
-class TrainingCreate(BaseModel):
-    title: str
-    description: str
-    capacity: int
-
-class TrainingRegister(BaseModel):
-    user_email: EmailStr
-
-class TrainingOut(BaseModel):
-    id: int
-    title: str
-    description: str | None
-    capacity: int
-    attendees: list[str]
-
-    class Config:
-        orm_mode = True
-        
-class UserOut(BaseModel):
-    id: int
-    name: str
-    email: EmailStr
-    trainings: list[str]
-    
-    class Config:
-        orm_mode = True
 
 # ------------------- ENDPOINTS -------------------
 
@@ -128,7 +39,7 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=f'Пользователь с id {user_id} не найден')
     db.delete(user)
     db.commit()
-    return {'message': f'Пользователь c id {user_id} успешно удалён'}
+    return {'message': f'Пользователь {user.name} успешно удалён'}
 
 @app.get('/users/{user_id}', response_model=UserOut, summary='Информация о пользователе')
 def get_user(user_id: int, db: Session = Depends(get_db)):
