@@ -1,0 +1,197 @@
+{
+  "info": {
+    "_postman_id": "e8538b09-8bad-4fd5-a405-27ac926268f8",
+    "name": "Fitness_API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52327475",
+    "_collection_link": "https://go.postman.co/collection/52327475-e8538b09-8bad-4fd5-a405-27ac926268f8?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Create User",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Pasha\",\r\n  \"email\": \"pasha@example.com\",\r\n  \"password\": \"123456\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/users",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "All users",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/users",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete user",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/users/7",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "users",
+            "7"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "User info",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/users/10",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "users",
+            "10"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create training",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"title\": \"Стретчинг и растяжка\",\r\n    \"description\": \"Упражнения для гибкости и подвижности суставов\",\r\n    \"capacity\": 8\r\n  }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/trainings",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "trainings"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "All trainings",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/trainings",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "trainings"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Register on training",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"user_email\": \"egor@example.com\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/trainings/8/register",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "trainings",
+            "8",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete training",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/trainings/1",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "trainings",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Training info",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/trainings/8",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "trainings",
+            "8"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
