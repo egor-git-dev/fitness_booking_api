@@ -4,6 +4,7 @@ from app.models import UserDB, RegistrationDB, TrainingDB
 from app.schemas import TrainingCreate, TrainingOut, TrainingRegister
 from app.database import get_db
 from app.services.registration_service import register_user_to_training
+from app.services.auth_service import get_current_user
 
 
 router = APIRouter(prefix="/trainings", tags=["Тренировки"])
@@ -12,7 +13,11 @@ router = APIRouter(prefix="/trainings", tags=["Тренировки"])
 # --------------------- Тренировки ---------------------
 
 @router.post('/', summary='Создать тренировку')
-def create_training(training: TrainingCreate, db: Session = Depends(get_db)):
+def create_training(
+    training: TrainingCreate,
+    db: Session = Depends(get_db),
+    current_user: UserDB = Depends(get_current_user)
+    ):
     new_training = TrainingDB(
         title=training.title,
         description=training.description,
@@ -45,12 +50,23 @@ def list_trainings(db: Session = Depends(get_db)):
         )
     return result
 
-@router.post("/{training_id}/register", summary='Записать пользователя на тренировку')
-def register(training_id: int, request: TrainingRegister, db: Session = Depends(get_db)):
-    registration = register_user_to_training(db=db, training_id=training_id, user_email=request.user_email)
+@router.post("/{training_id}/register", summary="Записать пользователя на тренировку")
+def register(
+    training_id: int, request: TrainingRegister,
+    db: Session = Depends(get_db),
+    current_user: UserDB = Depends(get_current_user),
+    ):
     
-    # register_user_to_training(db=db, training_id=training_id, user_email=request.user_email)
-    return {'message': f'Пользователь "{registration.user.name}" успешно записан на тренировку {registration.training.title}'}
+    # Вместо request.user_email используем текущего пользователя
+    registration = register_user_to_training(
+        db=db,
+        training_id=training_id,
+        user_email=current_user.email
+    )
+    
+    return {
+        "message": f'Пользователь "{current_user.name}" успешно записан на тренировку {registration.training.title}'
+    }
 
 
 @router.get('/{training_id}', response_model=TrainingOut, summary='Информация о тренировке')
@@ -76,7 +92,11 @@ def get_training(training_id: int, db: Session = Depends(get_db)):
 
 
 @router.delete('/{training_id}', summary='Удалить тренировку')
-def delete_training(training_id: int, db: Session = Depends(get_db)):
+def delete_training(
+    training_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserDB = Depends(get_current_user)
+    ):
     training = db.query(TrainingDB).filter(TrainingDB.id == training_id).first()
     if not training:
         raise HTTPException(status_code=404, detail='Тренировка не найдена')

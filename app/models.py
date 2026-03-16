@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Text, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Text, ForeignKey, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, Mapped, mapped_column, relationship, selectinload
 
@@ -14,6 +14,7 @@ class UserDB(Base):
     name: Mapped[str]
     email: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str]
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
 
     trainings: Mapped[list["RegistrationDB"]] = relationship(
         back_populates="user",
