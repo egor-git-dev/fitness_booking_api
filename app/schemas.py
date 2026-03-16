@@ -34,3 +34,14 @@ class UserOut(BaseModel):
     
     class Config:
         orm_mode = True
+
+# Для логина
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+# JWT токен
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"

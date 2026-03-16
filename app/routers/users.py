@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, selectinload
-
+from app.services.auth_service import hash_password
 from app.models import UserDB, RegistrationDB
-from app.schemas import UserCreate, UserOut
+from app.schemas import UserCreate, UserOut, UserLogin, Token
 from app.database import get_db
+from app.services.auth_service import verify_password, create_access_token
+
 
 router = APIRouter(prefix="/users", tags=["Пользователи"])
 
@@ -15,10 +17,15 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     if existing_user:
         raise HTTPException(status_code=400, detail='Пользователь с таким email уже существует')
 
-    new_user = UserDB(name=user.name, email=user.email, password=user.password)
+    # Хэшируем
+    hashed = hash_password(user.password)
+
+    # Создаём пользователя
+    new_user = UserDB(name=user.name, email=user.email, password=hashed)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
     return {'message': f'Пользователь {user.name} успешно зарегистрирован'}
 
 @router.get('/', summary='Все пользователи')
@@ -54,3 +61,12 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
         email=user.email,
         trainings=trainings
     )
+
+@router.post('/login', response_model=Token, summary='Логин пользователя')
+def login(user: UserLogin, db: Session = Depends(get_db)):
+    db_user = db.query(UserDB).filter(UserDB.email == user.email).first()
+    if not db_user or not verify_password(user.password, db_user.password):
+        raise HTTPException(status_code=401, detail="Неверный email или пароль")
+    
+    token = create_access_token({"sub": db_user.email})
+    return {"access_token": token, "token_type": "bearer"}
